@@ -63,6 +63,16 @@ return baseclass.extend({
 		'1.3'
 	],
 
+	CBIStaticList: form.DynamicList.extend({
+		__name__: 'CBI.StaticList',
+
+		renderWidget: function(/* ... */) {
+			var dl = form.DynamicList.prototype.renderWidget.apply(this, arguments);
+			dl.querySelector('.add-item ul > li[data-value="-"]').remove();
+			return dl;
+		}
+	}),
+
 	calcStringMD5: function(e) {
 		/* Thanks to https://stackoverflow.com/a/41602636 */
 		function h(a, b) {
@@ -160,7 +170,7 @@ return baseclass.extend({
 	},
 
 	getBuiltinFeatures: function() {
-		var callGetSingBoxFeatures = rpc.declare({
+		const callGetSingBoxFeatures = rpc.declare({
 			object: 'luci.homeproxy',
 			method: 'singbox_get_features',
 			expect: { '': {} }
@@ -229,7 +239,7 @@ return baseclass.extend({
 	},
 
 	uploadCertificate: function(option, type, filename, ev) {
-		var callWriteCertificate = rpc.declare({
+		const callWriteCertificate = rpc.declare({
 			object: 'luci.homeproxy',
 			method: 'certificate_write',
 			params: ['filename'],
@@ -253,6 +263,14 @@ return baseclass.extend({
 		if (section_id && value)
 			if (value.length !== length || !value.match(/^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$/) || value[length-1] !== '=')
 				return _('Expecting: %s').format(_('valid base64 key with %d characters').format(length));
+
+		return true;
+	},
+
+	validateCertificatePath: function(section_id, value) {
+		if (section_id && value)
+			if (!value.match(/^(\/etc\/homeproxy\/certs\/|\/etc\/acme\/|\/etc\/ssl\/).+$/))
+				return _('Expecting: %s').format(_('/etc/homeproxy/certs/..., /etc/acme/..., /etc/ssl/...'));
 
 		return true;
 	},
