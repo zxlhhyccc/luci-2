@@ -65,46 +65,32 @@ function render_status(node, ifc, with_device) {
 			null, E('em', _('Interface is marked for deletion'))
 		]);
 
-	var i18n = ifc.getI18n();
-	if (i18n)
-		desc = desc ? '%s (%s)'.format(desc, i18n) : i18n;
+	desc = desc ? '%s (%s)'.format(desc, ifc.getI18n()) : ifc.getI18n();
 
-	var changecount = with_device ? 0 : count_changes(ifc.getName()),
-	    ipaddrs = changecount ? [] : ifc.getIPAddrs(),
-	    ip6addrs = changecount ? [] : ifc.getIP6Addrs(),
-	    errors = ifc.getErrors(),
-	    maindev = ifc.getL3Device() || ifc.getDevice(),
-	    macaddr = maindev ? maindev.getMAC() : null;
+	const changecount = with_device ? 0 : count_changes(ifc.getName());
+	const maindev = ifc.getL3Device() || ifc.getDevice();
+	const macaddr = maindev ? maindev.getMAC() : null;
+	const cond00 = !changecount && !ifc.isDynamic() && !ifc.isAlias();
+	const cond01 = cond00 && macaddr;
+	const cond02 = cond00 && maindev;
+
+	function addEntries(label, array) {
+		return Array.isArray(array) ? array.flatMap((item) => [label, item]) : [label, null];
+	}
 
 	return L.itemlist(node, [
 		_('Protocol'), with_device ? null : (desc || '?'),
-		_('Device'),   with_device ? (maindev ? maindev.getShortName() : E('em', _('Not present'))) : null,
-		_('Uptime'),   (!changecount && ifc.isUp()) ? '%t'.format(ifc.getUptime()) : null,
-		_('MAC'),      (!changecount && !ifc.isDynamic() && !ifc.isAlias() && macaddr) ? macaddr : null,
-		_('RX'),       (!changecount && !ifc.isDynamic() && !ifc.isAlias() && maindev) ? '%.2mB (%d %s)'.format(maindev.getRXBytes(), maindev.getRXPackets(), _('Pkts.')) : null,
-		_('TX'),       (!changecount && !ifc.isDynamic() && !ifc.isAlias() && maindev) ? '%.2mB (%d %s)'.format(maindev.getTXBytes(), maindev.getTXPackets(), _('Pkts.')) : null,
-		_('IPv4'),     ipaddrs[0],
-		_('IPv4'),     ipaddrs[1],
-		_('IPv4'),     ipaddrs[2],
-		_('IPv4'),     ipaddrs[3],
-		_('IPv4'),     ipaddrs[4],
-		_('IPv6'),     ip6addrs[0],
-		_('IPv6'),     ip6addrs[1],
-		_('IPv6'),     ip6addrs[2],
-		_('IPv6'),     ip6addrs[3],
-		_('IPv6'),     ip6addrs[4],
-		_('IPv6'),     ip6addrs[5],
-		_('IPv6'),     ip6addrs[6],
-		_('IPv6'),     ip6addrs[7],
-		_('IPv6'),     ip6addrs[8],
-		_('IPv6'),     ip6addrs[9],
-		_('IPv6-PD'),  changecount ? null : ifc.getIP6Prefix(),
+		_('Device'), with_device ? (maindev ? maindev.getShortName() : E('em', _('Not present'))) : null,
+		_('Uptime'), (!changecount && ifc.isUp()) ? '%t'.format(ifc.getUptime()) : null,
+		_('MAC'), (cond01) ? macaddr : null,
+		_('RX'), (cond02) ? '%.2mB (%d %s)'.format(maindev.getRXBytes(), maindev.getRXPackets(), _('Pkts.')) : null,
+		_('TX'), (cond02) ? '%.2mB (%d %s)'.format(maindev.getTXBytes(), maindev.getTXPackets(), _('Pkts.')) : null,
+		...addEntries(_('IPv4'), changecount ? [] : ifc.getIPAddrs()),
+		...addEntries(_('IPv6'), changecount ? [] : ifc.getIP6Addrs()),
+		...addEntries(_('IPv6-PD'), changecount ? null : ifc.getIP6Prefixes?.()),
+		_('Information'), with_device ? null : (ifc.get('disabled') != '1' ? null : _('Interface disabled')),
 		_('Information'), with_device ? null : (ifc.get('auto') != '0' ? null : _('Not started on boot')),
-		_('Error'),    errors ? errors[0] : null,
-		_('Error'),    errors ? errors[1] : null,
-		_('Error'),    errors ? errors[2] : null,
-		_('Error'),    errors ? errors[3] : null,
-		_('Error'),    errors ? errors[4] : null,
+		...addEntries(_('Error'), ifc.getErrors()),
 		null, changecount ? E('a', {
 			href: '#',
 			click: L.bind(ui.changes.displayChanges, ui.changes)
@@ -298,7 +284,7 @@ return view.extend({
 				var e = map.querySelector('[id="cbi-network-%s"] .cbi-button-edit'.format(ifc.getName()));
 				if (e) e.disabled = true;
 
-				var link = L.url('admin/system/opkg') + '?query=luci-proto';
+				var link = L.url('admin/system/package-manager') + '?query=luci-proto';
 				dom.content(dsc, [
 					E('em', _('Unsupported protocol type.')), E('br'),
 					E('a', { href: link }, _('Install protocol extensions...'))
@@ -339,7 +325,6 @@ return view.extend({
 			network.getDSLModemType(),
 			network.getDevices(),
 			fs.lines('/etc/iproute2/rt_tables'),
-			L.resolveDefault(fs.read('/usr/lib/opkg/info/netifd.control')),
 			uci.changes()
 		]);
 	},
@@ -439,14 +424,11 @@ return view.extend({
 	},
 
 	render: function(data) {
-		var netifdVersion = (data[3] || '').match(/Version: ([^\n]+)/);
 
-		if (netifdVersion && netifdVersion[1] >= "2021-05-26") {
-			if (this.interfaceBridgeWithIfnameSections().length)
-				return this.renderBridgeMigration();
-			else if (this.deviceWithIfnameSections().length || this.interfaceWithIfnameSections().length)
-				return this.renderIfnameMigration();
-		}
+		if (this.interfaceBridgeWithIfnameSections().length)
+			return this.renderBridgeMigration();
+		else if (this.deviceWithIfnameSections().length || this.interfaceWithIfnameSections().length)
+			return this.renderIfnameMigration();
 
 		var dslModemType = data[0],
 		    netDevs = data[1],
@@ -693,6 +675,17 @@ return view.extend({
 						so = ss.taboption('general', form.Value, 'leasetime', _('Lease time'), _('Expiry time of leased addresses, minimum is 2 minutes (<code>2m</code>).'));
 						so.optional = true;
 						so.default = '12h';
+						so.validate = function (section_id, value) {
+							if (value === "infinite" || value === "deprecated") {
+								return true;
+							}
+
+							const regex = new RegExp("^[0-9]+[smhdw]?$", "i");
+							if (regex.test(value)) {
+								return true;
+							}
+							return _("Invalid DHCP lease time format. Use integer values optionally followed by s, m, h, d, or w.");
+						}
 
 						so = ss.taboption('advanced', form.Flag, 'dynamicdhcp', _('Dynamic <abbr title="Dynamic Host Configuration Protocol">DHCP</abbr>'), _('Dynamically allocate DHCP addresses for clients. If disabled, only clients having static leases will be served.'));
 						so.default = so.enabled;
@@ -1470,6 +1463,9 @@ return view.extend({
 			case '8021ad':
 				return '8021ad';
 
+			case 'bonding':
+				return 'bonding';
+
 			case 'bridge':
 				return 'bridge';
 
@@ -1501,6 +1497,9 @@ return view.extend({
 
 			case '8021ad':
 				return _('VLAN (802.1ad)');
+
+			case 'bonding':
+				return _('Aggregation device');
 
 			case 'bridge':
 				return _('Bridge device');

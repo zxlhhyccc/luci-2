@@ -87,7 +87,7 @@ var css = '								\
 
 var isReadonlyView = !L.hasViewPermission() || null;
 
-var callMountPoints = rpc.declare({
+const callMountPoints = rpc.declare({
 	object: 'luci',
 	method: 'getMountPoints',
 	expect: { result: [] }
@@ -261,6 +261,7 @@ function display(pattern)
 			btn = E('div', {
 				'class': 'btn cbi-button-positive',
 				'data-package': name,
+				'data-action': 'upgrade',
 				'click': handleInstall
 			}, _('Upgrade…'));
 		}
@@ -284,12 +285,14 @@ function display(pattern)
 				btn = E('div', {
 					'class': 'btn cbi-button-action',
 					'data-package': name,
+					'data-action': 'install',
 					'click': handleInstall
 				}, _('Install…'));
 			else if (inst.installed && inst.version != pkg.version)
 				btn = E('div', {
 					'class': 'btn cbi-button-positive',
 					'data-package': name,
+					'data-action': 'upgrade',
 					'click': handleInstall
 				}, _('Upgrade…'));
 			else
@@ -661,6 +664,7 @@ function handleReset(ev)
 function handleInstall(ev)
 {
 	var name = ev.target.getAttribute('data-package'),
+	    installcmd = ev.target.getAttribute('data-action'),
 	    pkg = packages.available.pkgs[name],
 	    depcache = {},
 	    size;
@@ -800,7 +804,7 @@ function handleInstall(ev)
 			}, _('Cancel')),
 			' ',
 			E('div', {
-				'data-command': 'install',
+				'data-command': installcmd,
 				'data-package': name,
 				'class': 'btn cbi-button-action',
 				'click': handlePkg,
@@ -861,8 +865,13 @@ function handleConfig(ev)
 	fs.list(base_dir).then(function(partials) {
 		var files = [];
 
-		if (!L.hasSystemFeature('apk'))
-			files.push(base_dir + '.conf')
+		if (L.hasSystemFeature('apk')) {
+                        files.push(base_dir + '/' + 'repositories.d/customfeeds.list',
+                                   base_dir + '/' + 'repositories.d/distfeeds.list'
+                        )
+                } else {
+                        files.push(base_dir + '.conf')
+                }
 
 		for (var i = 0; i < partials.length; i++) {
 			if (partials[i].type == 'file') {
@@ -872,7 +881,7 @@ function handleConfig(ev)
 				} else if (partials[i].name.match(/\.conf$/)) {
 					files.push(base_dir + '/' + partials[i].name);
 				}
-			}			
+			}
 		}
 
 		return Promise.all(files.map(function(file) {
@@ -1016,6 +1025,9 @@ function handlePkg(ev)
 
 		fs.exec_direct('/usr/libexec/package-manager-call', argv, 'json').then(function(res) {
 			dlg.removeChild(dlg.lastChild);
+
+			if (res.pkmcmd)
+				dlg.appendChild(E('pre', [ res.pkmcmd ]));
 
 			if (res.stdout)
 				dlg.appendChild(E('pre', [ res.stdout ]));
@@ -1248,7 +1260,7 @@ return view.extend({
 				E('tr', { 'class': 'tr cbi-section-table-titles' }, [
 					E('th', { 'class': 'th col-2 left' }, [ _('Package name') ]),
 					E('th', { 'class': 'th col-2 left version' }, [ _('Version') ]),
-					E('th', { 'class': 'th col-1 center size'}, [ _('Size (.ipk)') ]),
+					E('th', { 'class': 'th col-1 center size'}, [ _('Size (%s)').format(L.hasSystemFeature('apk') ? '.apk' : '.ipk') ]),
 					E('th', { 'class': 'th col-10 left' }, [ _('Description') ]),
 					E('th', { 'class': 'th right cbi-section-actions' }, [ '\u00a0' ])
 				])

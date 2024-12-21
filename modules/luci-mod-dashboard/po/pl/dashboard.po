@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
-"PO-Revision-Date: 2024-10-10 05:58+0000\n"
-"Last-Translator: Matthaiks <kitynska@gmail.com>\n"
+"PO-Revision-Date: 2024-10-27 16:19+0000\n"
+"Last-Translator: Adam Stańczyk <a.stanczyk@onet.pl>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/openwrt/"
 "lucimodulesluci-mod-dashboard/pl/>\n"
 "Language: pl\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
-"X-Generator: Weblate 5.8-dev\n"
+"X-Generator: Weblate 5.8.2-dev\n"
 
 #: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:163
 msgid "Active"
@@ -52,7 +52,7 @@ msgstr "DNSv6"
 
 #: modules/luci-mod-dashboard/root/usr/share/luci/menu.d/luci-mod-dashboard.json:3
 msgid "Dashboard"
-msgstr "Infopanel"
+msgstr "Info panel"
 
 #: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/20_lan.js:134
 msgid "Devices"
@@ -108,7 +108,7 @@ msgstr "Udziel dostępu do wyświetlania statusu sieci bezprzewodowej"
 
 #: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/20_lan.js:30
 #: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:83
-#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:223
+#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:225
 msgid "Hostname"
 msgstr "Nazwa hosta"
 
@@ -177,7 +177,7 @@ msgstr "Protokół"
 
 #: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:84
 #: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:157
-#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:229
+#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:231
 msgid "SSID"
 msgstr "SSID"
 
@@ -185,7 +185,7 @@ msgstr "SSID"
 msgid "Signal Strength"
 msgstr "Siła sygnału"
 
-#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:235
+#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:237
 msgid "Strength"
 msgstr "Siła"
 
@@ -193,7 +193,8 @@ msgstr "Siła"
 msgid "System"
 msgstr "System"
 
-#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:245
+#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:86
+#: modules/luci-mod-dashboard/htdocs/luci-static/resources/view/dashboard/include/30_wifi.js:247
 msgid "Transferred"
 msgstr "Przesłano"
 
